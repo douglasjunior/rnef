@@ -106,7 +106,8 @@ const importUp = async (
 };
 
 export async function getConfig(
-  dir: string = process.cwd()
+  dir: string = process.cwd(),
+  internalPlugins: PluginType[]
 ): Promise<ConfigOutput> {
   // eslint-disable-next-line prefer-const
   let { config, filePathWithExt } = await importUp(dir, 'rnef.config');
@@ -147,11 +148,16 @@ export async function getConfig(
     getReactNativePath: () => config.reactNativePath as string,
     getPlatforms: () => config.platforms as { [platform: string]: object },
     getRemoteCacheProvider: () => config.remoteCacheProvider,
-    getFingerprintOptions: () => config.fingerprint as {
-      extraSources: string[];
-      ignorePaths: string[];
-    },
+    getFingerprintOptions: () =>
+      config.fingerprint as {
+        extraSources: string[];
+        ignorePaths: string[];
+      },
   };
+
+  for (const internalPlugin of internalPlugins) {
+    assignOriginToCommand(internalPlugin, api, config);
+  }
 
   if (config.plugins) {
     // plugins register commands
